@@ -17,28 +17,35 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS “AS IS” 
 #include <string.h>
 #include <stdlib.h>
 
-typedef struct str_s {
+typedef struct str_arr_s {
 	char** str;
 	unsigned int size;
-} str_t;
+} str_arr_t;
 
 #define MCSTRDEF static inline
 
-#ifdef MCSTR_IMP
 /*
-  separates a char* between separator's occurances, returns a str_s struct with the resulting char* and it's size.
+  separates a char* between separator's occurances, returns a str_arr_s struct with the resulting char* and it's size.
  */
-MCSTRDEF str_t mcstr_separate_words(char* src, char separator) {
+MCSTRDEF str_arr_t mcstr_str_split(char* src, char separator);
+MCSTRDEF void mcstr_str_arr_println(const str_arr_t* const arr);
+MCSTRDEF int mcstr_str_arr_explode(str_arr_t *arr);
+MCSTRDEF str_arr_t mcstr_str_arr_init(void);
+MCSTRDEF int mcstr_str_arr_add(char* str, str_arr_t* arr);
+
+#ifdef MCSTR_IMP
+
+MCSTRDEF str_arr_t mcstr_str_split(char* src, char separator) {
 	size_t len = strlen(src);
 	if(!len)
-		return (str_t) {
+		return (str_arr_t) {
 			.size = 0,
 			.str = NULL,
 		};
-	str_t words = {
+	str_arr_t words = {
 		.size = 0,
 	};
-	words.str = malloc(sizeof(*(words.str)));
+	words.str = malloc(sizeof(words.str));
 	size_t last_word = 0;
 	size_t current_word_size = 0;
 
@@ -59,6 +66,39 @@ MCSTRDEF str_t mcstr_separate_words(char* src, char separator) {
 	}
 	
 	return words;
+}
+
+MCSTRDEF void mcstr_str_arr_println(const str_arr_t* const arr) {
+	for(int i = 0; i < arr->size; i++) {
+		printf("%s\n", arr->str[i]);
+	}
+}
+
+MCSTRDEF int mcstr_str_arr_explode(str_arr_t* arr) {
+	for(int i = 0; i < arr->size; i++) {
+		free(arr->str[i]);
+		arr->str[i] = NULL;
+	}
+	arr->size = 0;
+}
+
+MCSTRDEF str_arr_t mcstr_str_arr_init() {
+	str_arr_t temp = {
+		.size = 0,
+	};
+	temp.str = malloc(sizeof(temp.str));
+}
+
+MCSTRDEF int mcstr_str_arr_add(char* str, str_arr_t* arr) {
+	size_t len = strlen(str);
+	if(!len)
+		return -1;
+	arr->size++;
+	arr->str = realloc(arr->str, sizeof(*(arr->str)) * arr->size);
+	arr->str[arr->size - 1] = malloc(sizeof(**arr->str) * len +1);
+	memcpy(arr->str[arr->size - 1], str, len);
+	arr->str[arr->size - 1][len] = 0;
+	return 0;
 }
 #endif
 
